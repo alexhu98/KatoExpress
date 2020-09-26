@@ -1,0 +1,34 @@
+{
+  "name": "kato-express",
+  "version": "1.0.0",
+  "main": "src/server.ts",
+  "author": "Alex Hu <alexhu98@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "npm run build-ts",
+    "build-ts": "tsc",
+    "clean": "rm -rf ./dist",
+    "serve": "node dist/server.js",
+    "start": "npm run serve",
+    "test": "jest",
+    "watch-ts": "tsc --watch"
+  },
+  "repository": "https://alexhu98@bitbucket.org/alexhu98/katoexpress.git",
+  "dependencies": {
+    "compression": "^1.7.4",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "helmet": "^4.1.1"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.7.0",
+    "@types/express": "^4.17.8",
+    "@types/helmet": "^0.0.48",
+    "@types/jest": "^26.0.14",
+    "@types/node": "^14.11.2",
+    "eslint": "^7.9.0",
+    "jest": "^26.4.2",
+    "typescript": "^4.0.3"
+  }
+}
