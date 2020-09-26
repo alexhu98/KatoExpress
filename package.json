@@ -11,7 +11,8 @@
     "clean": "rm -rf ./dist",
     "serve": "node dist/server.js",
     "start": "npm run serve",
-    "test": "cross-env NODE_ENV=test jest --watch --runInBand --detectOpenHandles",
+    "test": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles",
+    "watch-test": "cross-env NODE_ENV=test jest --watch --runInBand --detectOpenHandles",
     "watch-ts": "tsc --watch"
   },
   "jest": {
