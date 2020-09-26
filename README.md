@@ -1,4 +1,4 @@
-yarn b## Introduction
+## Introduction
 
 This repo is a **barebone minimalistic** starter-kit for TypeScript-based ExpressJS (https://expressjs.com/) app.
 

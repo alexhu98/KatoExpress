@@ -11,8 +11,30 @@
     "clean": "rm -rf ./dist",
     "serve": "node dist/server.js",
     "start": "npm run serve",
-    "test": "jest",
+    "test": "cross-env NODE_ENV=test jest",
     "watch-ts": "tsc --watch"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "globals": {
+      "ts-jest": {
+        "tsConfigFile": "tsconfig.json"
+      }
+    },
+    "testMatch": [
+      "**/tests/*.+(ts|tsx|js)"
+    ]
   },
   "repository": "https://alexhu98@bitbucket.org/alexhu98/katoexpress.git",
   "dependencies": {
@@ -27,8 +49,12 @@
     "@types/helmet": "^0.0.48",
     "@types/jest": "^26.0.14",
     "@types/node": "^14.11.2",
+    "@types/supertest": "^2.0.10",
+    "cross-env": "^7.0.2",
     "eslint": "^7.9.0",
     "jest": "^26.4.2",
+    "supertest": "^5.0.0",
+    "ts-jest": "^26.4.0",
     "typescript": "^4.0.3"
   }
 }
