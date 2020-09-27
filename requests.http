@@ -15,16 +15,17 @@ Content-Type: application/json
 
 {
   "action": "MOVE_ALL",
-  "url": "http://192.168.0.78:8001/tstream/A1%20FHF%20200701.m4"
+  "list": ["http://192.168.0.78:8001/tstream/A1%20FHF%20200701.m4"]
 }
 
 ###
 
-DELETE http://localhost:8003/api/media
+POST http://localhost:8003/api/media
 Content-Type: application/json
 
 {
-  "url": "http://192.168.0.78:8001/tstream/A1%20FHF%20200701.m4"
+  "action": "FLAG",
+  "list": ["http://192.168.0.78:8001/tstream/A1%20FHF%20200701.m4"]
 }
 
 ###

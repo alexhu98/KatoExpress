@@ -34,7 +34,7 @@
       }
     },
     "testMatch": [
-      "**/tests/*.+(ts|tsx|js)"
+      "**/__tests__/*.+(ts|tsx|js)"
     ]
   },
   "repository": "https://alexhu98@bitbucket.org/alexhu98/katoexpress.git",
@@ -42,14 +42,19 @@
     "compression": "^1.7.4",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "helmet": "^4.1.1"
+    "helmet": "^4.1.1",
+    "lru-cache": "^6.0.0",
+    "ramda": "^0.27.1",
+    "ramda-adjunct": "^2.28.0"
   },
   "devDependencies": {
     "@types/compression": "^1.7.0",
     "@types/express": "^4.17.8",
     "@types/helmet": "^0.0.48",
     "@types/jest": "^26.0.14",
+    "@types/lru-cache": "^5.1.0",
     "@types/node": "^14.11.2",
+    "@types/ramda": "^0.27.19",
     "@types/supertest": "^2.0.10",
     "cross-env": "^7.0.2",
     "eslint": "^7.9.0",
