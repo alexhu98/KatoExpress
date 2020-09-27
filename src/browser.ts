@@ -1,8 +1,15 @@
 import { Request, Response } from 'express'
-import fs from 'fs'
+import { existsSync } from 'fs'
 import * as R from 'ramda'
-import * as RA from 'ramda-adjunct'
 import * as Data from './data'
+
+export const prepareBrowser = () => {
+  R.forEach(mediaFolder => {
+    const folderName = mediaFolder.name
+    const folderPath = Data.getMediaRoot() + folderName
+    Data.getMediaFiles(folderPath, folderName)
+  }, Data.mediaFolders)
+}
 
 export const browse = async (req: Request, res: Response) => {
   res.send(Data.mediaFolders)
@@ -12,17 +19,9 @@ export const browseMediaFolder = async (req: Request, res: Response) => {
   const { name: folderName } = req.params
   const folder = R.find(R.propEq('name', folderName), Data.mediaFolders)
   let result: any = []
-  if (folder) {
-    const folderPath = Data.getMediaRoot() + folderName
-    if (fs.existsSync(folderPath)) {
-      const list = fs.readdirSync(folderPath)
-      // console.log(`browseMediaFolder -> list`, list)
-      result = R.pipe(
-        R.map((fileName: string) => Data.getMediaFile(folderName, fileName)),
-        RA.compact,
-      )(list)
-      // console.log(`browseMediaFolder -> result`, result)
-    }
+  const folderPath = Data.getMediaRoot() + folderName
+  if (folder && existsSync(folderPath)) {
+    result = Data.getMediaFiles(folderPath, folderName)
   }
   res.send(result)
 }

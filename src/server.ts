@@ -8,6 +8,7 @@ dotenv.config()
 
 const port = process.env.PORT
 const app = express()
+Browser.prepareBrowser()
 
 app.use(helmet()) // set well-known security-related HTTP headers
 app.use(compression())

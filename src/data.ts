@@ -1,6 +1,7 @@
 import { execFileSync } from 'child_process'
-import fs from 'fs'
+import { Stats, readdirSync, statSync } from 'fs'
 import * as R from 'ramda'
+import * as RA from 'ramda-adjunct'
 import LRU from 'lru-cache'
 import { MediaFile, MediaFolder } from './models'
 import { existsSync, unlinkSync } from 'fs'
@@ -55,6 +56,15 @@ export const mediaFolders: MediaFolder[] = [
   buildMediaFolder('zstream'),
 ]
 
+export const getMediaFiles = (folderPath: string, folderName: string) => {
+  const list = readdirSync(folderPath)
+  return R.pipe(
+    R.map((fileName: string) => getMediaFile(folderName, fileName)),
+    RA.compact,
+  )(list)
+}
+
+
 const parseDuration = (lines: string[]): number => {
   let duration = 0
   R.forEach((line: string) => {
@@ -93,7 +103,7 @@ const parseDuration = (lines: string[]): number => {
   return duration
 }
 
-const getDuration = (path: string, stat: fs.Stats): number => {
+const getDuration = (path: string, stat: Stats): number => {
   const cacheKey = `${path} | ${stat.size} | ${stat.mtime}`
   let duration = lru.get(cacheKey)
   if (duration) {
@@ -120,7 +130,7 @@ const getDuration = (path: string, stat: fs.Stats): number => {
 export const getMediaFile = (folderName: string, fileName: string): MediaFile | undefined => {
   if (fileName.endsWith('.mp4') || fileName.endsWith('.m4')) {
     const path = getMediaRoot() + folderName + '/' + fileName
-    const stat = fs.statSync(path)
+    const stat = statSync(path)
     return {
       url: getStreamingRoot() + encodeURIComponent(folderName)  + '/' + encodeURIComponent(fileName),
       fileSize: stat.size,
