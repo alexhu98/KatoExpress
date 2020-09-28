@@ -1,11 +1,9 @@
-import { execFileSync } from 'child_process'
-import { Stats, readdirSync, statSync } from 'fs'
+import fs from 'fs'
+import cp from 'child_process'
+import util from 'util'
 import * as R from 'ramda'
-import * as RA from 'ramda-adjunct'
 import LRU from 'lru-cache'
 import { MediaFile, MediaFolder } from './models'
-import { existsSync, unlinkSync } from 'fs'
-import { renameSync } from 'fs'
 
 const DEFAULT_MEDIA_ROOT = 'x:/'
 const DEFAULT_STREAMING_ROOT = 'http://192.168.0.78:8001/'
@@ -18,7 +16,22 @@ export const ACTION_MOVE = 'MOVE'
 export const ACTION_MOVE_ALL = 'MOVE_ALL'
 export const ACTION_DELETE = 'DELETE'
 
-const lru = new LRU()
+const CACHE_MAX = 1000
+const lru = new LRU<string, number>(CACHE_MAX)
+
+const fsp = fs.promises
+
+export const exists = async (path: string): Promise<boolean> => {
+  try {
+    await fsp.stat(path)
+    return true
+  }
+  catch (ex) {
+  }
+  return false
+}
+
+const execFile = util.promisify(cp.execFile)
 
 export const getMediaRoot = (): string => {
   const folder = process.env.MEDIA_ROOT
@@ -56,14 +69,22 @@ export const mediaFolders: MediaFolder[] = [
   buildMediaFolder('zstream'),
 ]
 
-export const getMediaFiles = (folderPath: string, folderName: string) => {
-  const list = readdirSync(folderPath)
-  return R.pipe(
-    R.map((fileName: string) => getMediaFile(folderName, fileName)),
-    RA.compact,
-  )(list)
+export const getMediaFiles = async (folderPath: string, folderName: string) => {
+  const result: MediaFile[] = []
+  try {
+    const list = await fsp.readdir(folderPath)
+    for (const fileName of list) {
+      const mediaFile = await getMediaFile(folderName, fileName)
+      if (mediaFile) {
+        result.push(mediaFile)
+      }
+    }
+  }
+  catch (ex) {
+    console.error(`getMediaFiles() -> ${folderPath} ex`, ex)
+  }
+  return result
 }
-
 
 const parseDuration = (lines: string[]): number => {
   let duration = 0
@@ -99,43 +120,59 @@ const parseDuration = (lines: string[]): number => {
       }
     }
   }, lines)
-  // console.log(`parseDuration ->`, duration)
+  // console.log(`parseDuration() ->`, duration)
   return duration
 }
 
-const getDuration = (path: string, stat: Stats): number => {
+const getDuration = async (path: string, stat: fs.Stats): Promise<number> => {
   const cacheKey = `${path} | ${stat.size} | ${stat.mtime}`
   let duration = lru.get(cacheKey)
   if (duration) {
-    return duration as number
+    return duration
   }
-  // const command = `D:/GoogleDrive/Workspace/AutoRecode/exe/ffprobe.exe -hide_banner -v quiet -show_streams -print_format -flat "${path}"`
-  const lines = execFileSync('D:/GoogleDrive/Workspace/AutoRecode/exe/ffprobe.exe', [
-      '-hide_banner',
-      '-v',
-      'quiet',
-      '-show_streams',
-      '-print_format',
-      'flat',
-      path,
-    ]
-  ).toString().split('\n')
-  duration = parseDuration(lines)
+  try {
+    const { stdout } = await execFile('D:/GoogleDrive/Workspace/AutoRecode/exe/ffprobe.exe', [
+        '-hide_banner',
+        '-v',
+        'quiet',
+        '-show_streams',
+        '-print_format',
+        'flat',
+        path,
+      ]
+    )
+    if (stdout) {
+      const lines = stdout.toString().split('\n')
+      duration = parseDuration(lines)
+    }
+  }
+  catch (ex) {
+    console.error('getDuration() ex')
+  }
   if (duration) {
     lru.set(cacheKey, duration)
   }
-  return duration as number
+  else {
+    duration = 0
+  }
+  return duration
 }
 
-export const getMediaFile = (folderName: string, fileName: string): MediaFile | undefined => {
+export const getMediaFile = async (folderName: string, fileName: string): Promise<MediaFile | undefined> => {
   if (fileName.endsWith('.mp4') || fileName.endsWith('.m4')) {
     const path = getMediaRoot() + folderName + '/' + fileName
-    const stat = statSync(path)
-    return {
-      url: getStreamingRoot() + encodeURIComponent(folderName)  + '/' + encodeURIComponent(fileName),
-      fileSize: stat.size,
-      lastModified: stat.mtime.getTime(),
-      duration: getDuration(path, stat),
+    try {
+      const stat = await fsp.stat(path)
+      const duration = await getDuration(path, stat)
+      return {
+        url: getStreamingRoot() + encodeURIComponent(folderName)  + '/' + encodeURIComponent(fileName),
+        fileSize: stat.size,
+        lastModified: stat.mtime.getTime(),
+        duration,
+      }
+    }
+    catch (ex) {
+      console.error(`getMediaFile() ${folderName} ${fileName}`, ex)
     }
   }
   return undefined
@@ -154,56 +191,76 @@ const parseMediaFileName = (url: string): string[] => {
   return [folder, name]
 }
 
-export const flagFiles = (list: string[]) => {
-  R.forEach(url => {
+export const flagFiles = async (list: string[]) => {
+  for (const url of list) {
     const [folderName, fileName] = parseMediaFileName(url)
     if (folderName && fileName) {
       const folder = R.find(R.propEq('name', folderName), mediaFolders)
       if (folder) {
-        const path = getMediaRoot() + folderName + '/' + fileName
-        const target = getFlagFolder() + fileName
-        if (existsSync(path) && !existsSync(target)) {
-          renameSync(path, target)
+        try {
+          const path = getMediaRoot() + folderName + '/' + fileName
+          const target = getFlagFolder() + fileName
+          const oldExists = await exists(path)
+          const newExists = await exists(target)
+          if (oldExists && !newExists) {
+            await fsp.rename(path, target)
+          }
+        }
+        catch (ex) {
+          console.error(`flagFiles() ex`, ex)
         }
       }
     }
-  }, list)
+  }
 }
 
-export const moveFiles = (list: string[]) => {
-  R.forEach(url => {
+export const moveFiles = async (list: string[]) => {
+  for (const url of list) {
     const [folderName, fileName] = parseMediaFileName(url)
     if (folderName && fileName) {
       const folder = R.find(R.propEq('name', folderName), mediaFolders)
       if (folder) {
-        const path = getMediaRoot() + folderName + '/' + fileName
-        const target = getMoveFolder() + fileName
-        if (existsSync(path) && !existsSync(target)) {
-          renameSync(path, target)
+        try {
+          const path = getMediaRoot() + folderName + '/' + fileName
+          const target = getMoveFolder() + fileName
+          const oldExists = await exists(path)
+          const newExists = await exists(target)
+          if (oldExists && !newExists) {
+            await fsp.rename(path, target)
+          }
+        }
+        catch (ex) {
+          console.error(`moveFiles() ex`, ex)
         }
       }
     }
-  }, list)
+  }
 }
 
-export const deleteFiles = (list: string[]) => {
-  R.forEach(url => {
+export const deleteFiles = async (list: string[]) => {
+  for (const url of list) {
     const [folderName, fileName] = parseMediaFileName(url)
     if (folderName && fileName) {
       const folder = R.find(R.propEq('name', folderName), mediaFolders)
       if (folder) {
-        const path = getMediaRoot() + folderName + '/' + fileName
-        if (existsSync(path)) {
-          unlinkSync(path)
+        try {
+          const path = getMediaRoot() + folderName + '/' + fileName
+          const pathExists = await exists(path)
+          if (pathExists) {
+            await fsp.unlink(path)
+          }
+        }
+        catch (ex) {
+          console.error(`deleteFiles() ex`, ex)
         }
       }
     }
-  }, list)
+  }
 }
 
-export const moveAllFiles = () => {
+export const moveAllFiles = async () => {
   try {
-    execFileSync(MOVE_ALL_COMMAND)
+    await execFile(MOVE_ALL_COMMAND)
   }
   catch (ex) {
   }

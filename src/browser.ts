@@ -1,14 +1,20 @@
 import { Request, Response } from 'express'
-import { existsSync } from 'fs'
+import fs from 'fs'
 import * as R from 'ramda'
 import * as Data from './data'
 
-export const prepareBrowser = () => {
-  R.forEach(mediaFolder => {
+export const prepareBrowser = async () => {
+  for (const mediaFolder of Data.mediaFolders) {
     const folderName = mediaFolder.name
     const folderPath = Data.getMediaRoot() + folderName
-    Data.getMediaFiles(folderPath, folderName)
-  }, Data.mediaFolders)
+    await Data.getMediaFiles(folderPath, folderName)
+
+    if (process.env.NODE_ENV !== 'test') {
+      fs.watch(folderPath, {}, async (eventType, fileName) => {
+        await Data.getMediaFiles(folderPath, folderName)
+      })
+    }
+  }
 }
 
 export const browse = async (req: Request, res: Response) => {
@@ -20,8 +26,9 @@ export const browseMediaFolder = async (req: Request, res: Response) => {
   const folder = R.find(R.propEq('name', folderName), Data.mediaFolders)
   let result: any = []
   const folderPath = Data.getMediaRoot() + folderName
-  if (folder && existsSync(folderPath)) {
-    result = Data.getMediaFiles(folderPath, folderName)
+  const folderExists = await Data.exists(folderPath)
+  if (folder && folderExists) {
+    result = await Data.getMediaFiles(folderPath, folderName)
   }
   res.send(result)
 }
@@ -35,15 +42,15 @@ export const execute = async (req: Request, res: Response) => {
     const { action, list } = req.body
     switch (action) {
       case Data.ACTION_FLAG:
-        Data.flagFiles(R.defaultTo([], list))
+        await Data.flagFiles(R.defaultTo([], list))
         break
 
       case Data.ACTION_MOVE:
-        Data.moveFiles(R.defaultTo([], list))
+        await Data.moveFiles(R.defaultTo([], list))
         break
 
       case Data.ACTION_DELETE:
-        Data.deleteFiles(R.defaultTo([], list))
+        await Data.deleteFiles(R.defaultTo([], list))
         break
 
       case Data.ACTION_MOVE_ALL:
