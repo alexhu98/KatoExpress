@@ -16,10 +16,22 @@ export const ACTION_MOVE = 'MOVE'
 export const ACTION_MOVE_ALL = 'MOVE_ALL'
 export const ACTION_DELETE = 'DELETE'
 
+interface IVideoInfo {
+  duration: number,
+  width: number,
+  height: number,
+}
+
 const CACHE_MAX = 1000
-const lru = new LRU<string, number>(CACHE_MAX)
+const lru = new LRU<string, IVideoInfo>(CACHE_MAX)
 
 const fsp = fs.promises
+
+export const sleep = async (ms: number): Promise<void> => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  })
+}
 
 export const exists = async (path: string): Promise<boolean> => {
   try {
@@ -86,13 +98,23 @@ export const getMediaFiles = async (folderPath: string, folderName: string) => {
   return result
 }
 
-const parseDuration = (lines: string[]): number => {
+const parseVideoInfo = (path: string, lines: string[]): any => {
   let duration = 0
+  let width = 0
+  let height = 0
   R.forEach((line: string) => {
     line = line.trim()
     if (line.includes('.duration=') && !line.endsWith('"N/A"')) {
       // streams.stream.0.duration="7092.492375"
-      duration = Math.floor(parseFloat(line.substring(27, line.length - 2)))
+      duration = Math.floor(parseFloat(line.substring(27, line.length - 1)))
+    }
+    if (line.includes('.width=') && !line.endsWith('"N/A"')) {
+      // streams.stream.0.width=416
+      width = parseInt(line.substring(23, line.length))
+    }
+    if (line.includes('.height=') && !line.endsWith('"N/A"')) {
+      // streams.stream.0.height=720
+      height = parseInt(line.substring(24, line.length))
     }
     if (line.includes('.tags.DURATION') && !line.endsWith('"N/A"')) {
       // streams.stream.0.tags.DURATION="01:58:12.492000000"
@@ -120,15 +142,19 @@ const parseDuration = (lines: string[]): number => {
       }
     }
   }, lines)
-  // console.log(`parseDuration() ->`, duration)
-  return duration
+  // console.log(`parseVideoInfo() -> ${width} x ${height} ${duration}s ${path}`)
+  return {
+    duration,
+    width,
+    height,
+  }
 }
 
-const getDuration = async (path: string, stat: fs.Stats): Promise<number> => {
+const getVideoInfo = async (path: string, stat: fs.Stats): Promise<IVideoInfo> => {
   const cacheKey = `${path} | ${stat.size} | ${stat.mtime}`
-  let duration = lru.get(cacheKey)
-  if (duration) {
-    return duration
+  let videoInfo = lru.get(cacheKey)
+  if (videoInfo) {
+    return videoInfo
   }
   try {
     const { stdout } = await execFile('D:/GoogleDrive/Workspace/AutoRecode/exe/ffprobe.exe', [
@@ -143,19 +169,23 @@ const getDuration = async (path: string, stat: fs.Stats): Promise<number> => {
     )
     if (stdout) {
       const lines = stdout.toString().split('\n')
-      duration = parseDuration(lines)
+      videoInfo = parseVideoInfo(path, lines)
     }
   }
   catch (ex) {
     console.error('getDuration() ex')
   }
-  if (duration) {
-    lru.set(cacheKey, duration)
+  if (videoInfo) {
+    lru.set(cacheKey, videoInfo)
   }
   else {
-    duration = 0
+    videoInfo = {
+      duration: 0,
+      width: 0,
+      height: 0,
+    }
   }
-  return duration
+  return videoInfo
 }
 
 export const getMediaFile = async (folderName: string, fileName: string): Promise<MediaFile | undefined> => {
@@ -163,12 +193,13 @@ export const getMediaFile = async (folderName: string, fileName: string): Promis
     const path = getMediaRoot() + folderName + '/' + fileName
     try {
       const stat = await fsp.stat(path)
-      const duration = await getDuration(path, stat)
+      const videoInfo = await getVideoInfo(path, stat)
+      // console.log(`getMediaFile() ${fileName} duration =`, duration)
       return {
         url: getStreamingRoot() + encodeURIComponent(folderName)  + '/' + encodeURIComponent(fileName),
         fileSize: stat.size,
         lastModified: stat.mtime.getTime(),
-        duration,
+        ...videoInfo,
       }
     }
     catch (ex) {

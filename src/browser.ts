@@ -3,7 +3,10 @@ import fs from 'fs'
 import * as R from 'ramda'
 import * as Data from './data'
 
+const SLEEP_TIME = 10000 // sleep 10 seconds before refreshing the list
+
 export const prepareBrowser = async () => {
+  let watchCount = 0
   for (const mediaFolder of Data.mediaFolders) {
     const folderName = mediaFolder.name
     const folderPath = Data.getMediaRoot() + folderName
@@ -11,7 +14,11 @@ export const prepareBrowser = async () => {
 
     if (process.env.NODE_ENV !== 'test') {
       fs.watch(folderPath, {}, async (eventType, fileName) => {
-        await Data.getMediaFiles(folderPath, folderName)
+        watchCount++
+        await Data.sleep(SLEEP_TIME)
+        if (--watchCount === 0)  {
+          await Data.getMediaFiles(folderPath, folderName)
+        }
       })
     }
   }
