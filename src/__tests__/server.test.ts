@@ -3,7 +3,7 @@ import server from '../server'
 import * as Data from '../data'
 import { MediaFile } from '../models'
 
-afterAll(async () => await request(server).get('/api/terminate'))
+afterAll(async () => await server.close())
 
 describe('browse()', () => {
   it('/api/media', async () => {

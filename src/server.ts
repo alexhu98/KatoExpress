@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express'
+import express from 'express'
 import dotenv from 'dotenv'
 import compression from 'compression'
 import helmet from 'helmet'
@@ -8,7 +8,10 @@ dotenv.config()
 
 const port = process.env.PORT
 const app = express()
-Browser.prepareBrowser().then(() => console.log('Browser cached'))
+
+if (process.env.NODE_ENV !== 'test') {
+  Browser.prepareBrowser().then(() => console.log('Browser cached'))
+}
 
 app.use(helmet()) // set well-known security-related HTTP headers
 app.use(compression())
@@ -21,12 +24,5 @@ app.get('/api/media/:name', Browser.browseMediaFolder)
 app.post('/api/media', Browser.execute)
 
 const server = app.listen(port, () => console.log(`Starting ExpressJS server on Port ${port}`))
-
-if (process.env.NODE_ENV === 'test') {
-    app.get('/api/terminate', (req: Request, res: Response) => {
-    res.send('Terminate...');
-    server.close()
-  })
-}
 
 export default server
