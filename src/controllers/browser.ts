@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import fs from 'fs'
 import * as R from 'ramda'
-import * as Data from './data'
+import * as Data from '../data'
 
 const SLEEP_TIME = 10000 // sleep 10 seconds before refreshing the list
 

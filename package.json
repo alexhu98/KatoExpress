@@ -39,9 +39,13 @@
   },
   "repository": "https://alexhu98@bitbucket.org/alexhu98/katoexpress.git",
   "dependencies": {
+    "@types/cors": "^2.8.7",
     "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "date-fns": "^2.16.1",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "googleapis": "^60.0.1",
     "helmet": "^4.1.1",
     "lru-cache": "^6.0.0",
     "ramda": "^0.27.1",
