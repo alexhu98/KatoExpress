@@ -1,7 +1,7 @@
-import { addWeeks, format, startOfToday } from 'date-fns'
 import { Request, Response } from 'express'
 import { google } from 'googleapis'
 import * as R from 'ramda'
+import { addWeeks, formatISO, startOfToday } from 'date-fns'
 
 const { OAuth2 } = google.auth
 
@@ -17,8 +17,8 @@ oAuth2Client.setCredentials({
 const calendar = google.calendar({ version: 'v3', auth: oAuth2Client })
 
 export const getEvents = async (req: Request, res: Response) => {
-  const eventStartTime = format(startOfToday(), 'yyyy-MM-dd') + 'T00:00:00.000Z'
-  const eventEndTime = format(addWeeks(startOfToday(), 2), 'yyyy-MM-dd') + 'T00:00:00.000Z'
+  const eventStartTime = formatISO(startOfToday())
+  const eventEndTime = formatISO(addWeeks(startOfToday(), 2))
   const result = await calendar.events.list({
     calendarId: 'primary',
     singleEvents: true,
