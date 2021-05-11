@@ -15,6 +15,7 @@ export const ACTION_FLAG = 'FLAG'
 export const ACTION_MOVE = 'MOVE'
 export const ACTION_MOVE_ALL = 'MOVE_ALL'
 export const ACTION_DELETE = 'DELETE'
+export const ACTION_SYNC = 'SYNC'
 
 interface IVideoInfo {
   duration: number,
@@ -23,7 +24,8 @@ interface IVideoInfo {
 }
 
 const CACHE_MAX = 1000
-const lru = new LRU<string, IVideoInfo>(CACHE_MAX)
+const videoInfoCache = new LRU<string, IVideoInfo>(CACHE_MAX)
+const syncList = new LRU<string, String>(CACHE_MAX)
 
 const fsp = fs.promises
 
@@ -152,7 +154,7 @@ const parseVideoInfo = (path: string, lines: string[]): any => {
 
 const getVideoInfo = async (path: string, stat: fs.Stats): Promise<IVideoInfo> => {
   const cacheKey = `${path} | ${stat.size} | ${stat.mtime}`
-  let videoInfo = lru.get(cacheKey)
+  let videoInfo = videoInfoCache.get(cacheKey)
   if (videoInfo) {
     return videoInfo
   }
@@ -176,7 +178,7 @@ const getVideoInfo = async (path: string, stat: fs.Stats): Promise<IVideoInfo> =
     console.error('getDuration() ex')
   }
   if (videoInfo) {
-    lru.set(cacheKey, videoInfo)
+    videoInfoCache.set(cacheKey, videoInfo)
   }
   else {
     videoInfo = {
@@ -203,7 +205,7 @@ export const getMediaFile = async (folderName: string, fileName: string): Promis
       }
     }
     catch (ex) {
-      console.error(`getMediaFile() ${folderName} ${fileName}`, ex)
+      // console.error(`getMediaFile() ${folderName} ${fileName}`, ex)
     }
   }
   return undefined
@@ -295,4 +297,22 @@ export const moveAllFiles = async () => {
   }
   catch (ex) {
   }
+}
+
+const getFileItemKey = (url: string) => {
+  return url
+}
+
+
+export const syncFiles = async (list: string[]) => {
+  R.forEach(json => {
+    const fileItem: any = JSON.parse(json)
+    const key = getFileItemKey(fileItem.url)
+    console.log(`syncFiles -> key`, key)
+    const existingItem: any = syncList.get(key)
+    if (!existingItem || existingItem.lastUpdated < fileItem.lastUpdated) {
+      syncList.set(key, fileItem)
+    }
+  }, list)
+  return JSON.stringify(syncList.values())
 }

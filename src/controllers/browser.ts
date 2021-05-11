@@ -10,6 +10,7 @@ export const prepareBrowser = async () => {
   for (const mediaFolder of Data.mediaFolders) {
     const folderName = mediaFolder.name
     const folderPath = Data.getMediaRoot() + folderName
+    console.log(`prepareBrowser -> folderPath`, folderPath)
     await Data.getMediaFiles(folderPath, folderName)
 
     if (process.env.NODE_ENV !== 'test') {
@@ -47,6 +48,7 @@ export const execute = async (req: Request, res: Response) => {
   }
   if (req.body) {
     const { action, list } = req.body
+    let message = list
     switch (action) {
       case Data.ACTION_FLAG:
         await Data.flagFiles(R.defaultTo([], list))
@@ -61,13 +63,18 @@ export const execute = async (req: Request, res: Response) => {
         break
 
       case Data.ACTION_MOVE_ALL:
-        Data.moveAllFiles()
+        await Data.moveAllFiles()
+        break
+
+      case Data.ACTION_SYNC:
+        message = await Data.syncFiles(R.defaultTo([], list))
         break
     }
     result = {
       success: true,
-      message: `${action} ${R.defaultTo('', list)}`,
+      message: `${action} ${R.defaultTo('', message)}`,
     }
+    console.log(`execute -> result`, result)
   }
   res.send(result)
 }
