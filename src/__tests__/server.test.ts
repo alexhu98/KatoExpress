@@ -25,8 +25,8 @@ describe('browseMediaFolder()', () => {
     expect(files.length).toEqual(0)
   })
 
-  it('/api/media/tstream', async () => {
-    const result = await request(server).get('/api/media/tstream')
+  it('/api/media/xstream', async () => {
+    const result = await request(server).get('/api/media/xstream')
     expect(result.status).toEqual(200)
     const files = result.body
     expect(files.length).toBeGreaterThan(0)
@@ -79,7 +79,7 @@ describe('flagMediaFile()', () => {
   })
 
   it('FLAG single in list', async () => {
-    const browseResult = await request(server).get('/api/media/tstream')
+    const browseResult = await request(server).get('/api/media/xstream')
     expect(browseResult.status).toEqual(200)
     const files = browseResult.body
     expect(files.length).toBeGreaterThan(0)
@@ -100,7 +100,7 @@ describe('flagMediaFile()', () => {
   })
 
   it('FLAG duplicate in list', async () => {
-    const browseResult = await request(server).get('/api/media/tstream')
+    const browseResult = await request(server).get('/api/media/xstream')
     expect(browseResult.status).toEqual(200)
     const files = browseResult.body
     expect(files.length).toBeGreaterThan(0)
@@ -161,7 +161,7 @@ describe('moveMediaFile()', () => {
   })
 
   it('MOVE single in list', async () => {
-    const browseResult = await request(server).get('/api/media/tstream')
+    const browseResult = await request(server).get('/api/media/xstream')
     expect(browseResult.status).toEqual(200)
     const files = browseResult.body
     expect(files.length).toBeGreaterThan(0)
@@ -182,7 +182,7 @@ describe('moveMediaFile()', () => {
   })
 
   it('MOVE duplicate in list', async () => {
-    const browseResult = await request(server).get('/api/media/tstream')
+    const browseResult = await request(server).get('/api/media/xstream')
     expect(browseResult.status).toEqual(200)
     const files = browseResult.body
     expect(files.length).toBeGreaterThan(0)
@@ -243,7 +243,7 @@ describe('deleteMediaFile()', () => {
   })
 
   it('DELETE single in list', async () => {
-    const browseResult = await request(server).get('/api/media/tstream')
+    const browseResult = await request(server).get('/api/media/xstream')
     expect(browseResult.status).toEqual(200)
     const files = browseResult.body
     expect(files.length).toBeGreaterThan(0)
@@ -264,7 +264,7 @@ describe('deleteMediaFile()', () => {
   })
 
   it('DELETE duplicate in list', async () => {
-    const browseResult = await request(server).get('/api/media/tstream')
+    const browseResult = await request(server).get('/api/media/xstream')
     expect(browseResult.status).toEqual(200)
     const files = browseResult.body
     expect(files.length).toBeGreaterThan(0)

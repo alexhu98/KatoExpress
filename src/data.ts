@@ -75,7 +75,6 @@ const buildMediaFolder = (name: string): MediaFolder => {
 }
 
 export const mediaFolders: MediaFolder[] = [
-  buildMediaFolder('tstream'),
   buildMediaFolder('ustream'),
   buildMediaFolder('wstream'),
   buildMediaFolder('xstream'),
