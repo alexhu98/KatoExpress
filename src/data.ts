@@ -6,7 +6,7 @@ import LRU from 'lru-cache'
 import { MediaFile, MediaFolder } from './models'
 
 const DEFAULT_MEDIA_ROOT = 'x:/'
-const DEFAULT_STREAMING_ROOT = 'http://192.168.0.78:8001/'
+const DEFAULT_STREAMING_ROOT = 'http://192.168.0.63:8003/'
 const DEFAULT_FLAG_FOLDER = 'x:/flagged/'
 const DEFAULT_MOVE_FOLDER = 'x:/moved/'
 const MOVE_ALL_COMMAND = 'x:/ystream/_move_to_all.bat'

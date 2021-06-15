@@ -28,6 +28,12 @@ app.post('/api/media', Browser.execute)
 
 app.get('/api/calendar/events', Calendar.getEvents)
 
+app.use('/ustream', express.static('D:/mnt/x/ustream'))
+app.use('/wstream', express.static('D:/mnt/x/wstream'))
+app.use('/xstream', express.static('D:/mnt/x/xstream'))
+app.use('/ystream', express.static('D:/mnt/x/ystream'))
+app.use('/zstream', express.static('D:/mnt/x/zstream'))
+
 const server = app.listen(port, () => console.log(`Starting ExpressJS server on Port ${port}`))
 
 export default server
