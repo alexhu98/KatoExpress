@@ -28,11 +28,14 @@ app.post('/api/media', Browser.execute)
 
 app.get('/api/calendar/events', Calendar.getEvents)
 
-app.use('/ustream', express.static('D:/mnt/x/ustream'))
-app.use('/wstream', express.static('D:/mnt/x/wstream'))
-app.use('/xstream', express.static('D:/mnt/x/xstream'))
-app.use('/ystream', express.static('D:/mnt/x/ystream'))
-app.use('/zstream', express.static('D:/mnt/x/zstream'))
+app.use('/ustream', express.static('/mnt/x/ustream'))
+app.use('/wstream', express.static('/mnt/x/wstream'))
+app.use('/xstream', express.static('/mnt/x/xstream'))
+app.use('/ystream', express.static('/mnt/x/ystream'))
+app.use('/zstream', express.static('/mnt/x/zstream'))
+
+app.use('/', express.static('/mnt/data/GoogleDrive/PythonProjects'))
+
 
 const server = app.listen(port, () => console.log(`Starting ExpressJS server on Port ${port}`))
 

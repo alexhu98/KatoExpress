@@ -5,11 +5,11 @@ import * as R from 'ramda'
 import LRU from 'lru-cache'
 import { MediaFile, MediaFolder } from './models'
 
-const DEFAULT_MEDIA_ROOT = 'x:/'
+const DEFAULT_MEDIA_ROOT = '/mnt/x/'
 const DEFAULT_STREAMING_ROOT = 'http://192.168.0.63:8003/'
-const DEFAULT_FLAG_FOLDER = 'x:/flagged/'
-const DEFAULT_MOVE_FOLDER = 'x:/moved/'
-const MOVE_ALL_COMMAND = 'x:/ystream/_move_to_all.bat'
+const DEFAULT_FLAG_FOLDER = '/mnt/x/flagged/'
+const DEFAULT_MOVE_FOLDER = '/mnt/x/moved/'
+const MOVE_ALL_COMMAND = '/mnt/x/ystream/_move_to_all.bat'
 
 export const ACTION_FLAG = 'FLAG'
 export const ACTION_MOVE = 'MOVE'
@@ -158,7 +158,8 @@ const getVideoInfo = async (path: string, stat: fs.Stats): Promise<IVideoInfo> =
     return videoInfo
   }
   try {
-    const { stdout } = await execFile('D:/GoogleDrive/Workspace/AutoRecode/exe/ffprobe.exe', [
+    // const { stdout } = await execFile('D:/GoogleDrive/Workspace/AutoRecode/exe/ffprobe.exe', [
+    const { stdout } = await execFile('ffprobe', [
         '-hide_banner',
         '-v',
         'quiet',
