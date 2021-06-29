@@ -8,8 +8,9 @@ import { MediaFile, MediaFolder } from './models'
 const DEFAULT_MEDIA_ROOT = '/mnt/x/'
 const DEFAULT_STREAMING_ROOT = 'http://192.168.0.63:8003/'
 const DEFAULT_FLAG_FOLDER = '/mnt/x/flagged/'
-const DEFAULT_MOVE_FOLDER = '/mnt/x/moved/'
-const MOVE_ALL_COMMAND = '/mnt/x/ystream/_move_to_all.bat'
+const DEFAULT_MOVE_FOLDER = '/mnt/x/x/'
+const DEFAULT_MOVE_FOLDER2 = '/mnt/x/w/'
+const DEFAULT_MOVE_ALL_FOLDER = '/mnt/x/z/'
 
 export const ACTION_FLAG = 'FLAG'
 export const ACTION_MOVE = 'MOVE'
@@ -62,9 +63,15 @@ export const getFlagFolder = (): string => {
   return R.defaultTo(DEFAULT_FLAG_FOLDER, folder)
 }
 
-export const getMoveFolder = (): string => {
+export const getMoveFolder = (folderName: string): string => {
   const folder = process.env.MOVE_FOLDER
-  return R.defaultTo(DEFAULT_MOVE_FOLDER, folder)
+  const folder2 = process.env.MOVE_FOLDER2
+  return folderName.startsWith('x') ? R.defaultTo(DEFAULT_MOVE_FOLDER2, folder2) : R.defaultTo(DEFAULT_MOVE_FOLDER, folder)
+}
+
+export const getMoveAllFolder = (): string => {
+  const folder = process.env.MOVE_ALL_FOLDER
+  return R.defaultTo(DEFAULT_MOVE_ALL_FOLDER, folder)
 }
 
 const buildMediaFolder = (name: string): MediaFolder => {
@@ -255,7 +262,7 @@ export const moveFiles = async (list: string[]) => {
       if (folder) {
         try {
           const path = getMediaRoot() + folderName + '/' + fileName
-          const target = getMoveFolder() + fileName
+          const target = getMoveFolder(folderName) + fileName
           const oldExists = await exists(path)
           const newExists = await exists(target)
           if (oldExists && !newExists) {
@@ -292,10 +299,28 @@ export const deleteFiles = async (list: string[]) => {
 }
 
 export const moveAllFiles = async () => {
-  try {
-    await execFile(MOVE_ALL_COMMAND)
-  }
-  catch (ex) {
+  // move files from ystream to z
+  const folderName = 'ystream'
+  const folder = R.find(R.propEq('name', folderName), mediaFolders)
+  if (folder) {
+    try {
+      const folderPath = getMediaRoot() + folderName
+      const list = await fsp.readdir(folderPath)
+      for (const fileName of list) {
+        if (fileName.endsWith('.mp4') || fileName.endsWith('.m4')) {
+          const path = getMediaRoot() + folderName + '/' + fileName
+          const target = getMoveAllFolder() + fileName
+          const oldExists = await exists(path)
+          const newExists = await exists(target)
+          if (oldExists && !newExists) {
+            await fsp.rename(path, target)
+          }
+        }
+      }
+    }
+    catch (ex) {
+      console.error(`moveAllFiles() ex`, ex)
+    }
   }
 }
 
