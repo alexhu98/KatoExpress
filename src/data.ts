@@ -8,6 +8,7 @@ import { MediaFile, MediaFolder } from './models'
 const DEFAULT_MEDIA_ROOT = '/mnt/x/'
 const DEFAULT_STREAMING_ROOT = 'http://192.168.0.63:8003/'
 const DEFAULT_FLAG_FOLDER = '/mnt/x/flagged/'
+const DEFAULT_FLAG_FOLDER2 = '/mnt/x/w/'
 const DEFAULT_MOVE_FOLDER = '/mnt/x/x/'
 const DEFAULT_MOVE_FOLDER2 = '/mnt/x/w/'
 const DEFAULT_MOVE_ALL_FOLDER = '/mnt/x/z/'
@@ -58,9 +59,10 @@ export const getStreamingRoot = (): string => {
   return R.defaultTo(DEFAULT_STREAMING_ROOT, folder)
 }
 
-export const getFlagFolder = (): string => {
+export const getFlagFolder = (folderName: string): string => {
   const folder = process.env.FLAG_FOLDER
-  return R.defaultTo(DEFAULT_FLAG_FOLDER, folder)
+  const folder2 = process.env.FLAG_FOLDER2
+  return folderName.startsWith('y') ? R.defaultTo(DEFAULT_FLAG_FOLDER2, folder2) : R.defaultTo(DEFAULT_FLAG_FOLDER, folder)
 }
 
 export const getMoveFolder = (folderName: string): string => {
@@ -239,7 +241,7 @@ export const flagFiles = async (list: string[]) => {
       if (folder) {
         try {
           const path = getMediaRoot() + folderName + '/' + fileName
-          const target = getFlagFolder() + fileName
+          const target = getFlagFolder(folderName) + fileName
           const oldExists = await exists(path)
           const newExists = await exists(target)
           if (oldExists && !newExists) {
