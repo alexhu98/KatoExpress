@@ -9,7 +9,7 @@ export const prepareBrowser = async () => {
   let watchCount = 0
   for (const mediaFolder of Data.mediaFolders) {
     const folderName = mediaFolder.name
-    const folderPath = Data.getMediaRoot() + folderName
+    const folderPath = await Data.getMediaFolder(folderName)
     console.log(`prepareBrowser -> folderPath`, folderPath)
     await Data.getMediaFiles(folderPath, folderName)
 
@@ -33,7 +33,7 @@ export const browseMediaFolder = async (req: Request, res: Response) => {
   const { name: folderName } = req.params
   const folder = R.find(R.propEq('name', folderName), Data.mediaFolders)
   let result: any = []
-  const folderPath = Data.getMediaRoot() + folderName
+  const folderPath = await Data.getMediaFolder(folderName)
   const folderExists = await Data.exists(folderPath)
   if (folder && folderExists) {
     result = await Data.getMediaFiles(folderPath, folderName)
@@ -47,28 +47,33 @@ export const execute = async (req: Request, res: Response) => {
     message: '',
   }
   if (req.body) {
-    const { action, list } = req.body
+    const { action } = req.body
+    let { list } = req.body
     let message = list
-    switch (action) {
-      case Data.ACTION_FLAG:
-        await Data.flagFiles(R.defaultTo([], list))
-        break
+    list = R.defaultTo([], list)
+    const first = R.head(list)
+   if (first && first.indexOf('stream') >= 0) {
+      switch (action) {
+        case Data.ACTION_FLAG:
+          await Data.flagFiles(list)
+          break
 
-      case Data.ACTION_MOVE:
-        await Data.moveFiles(R.defaultTo([], list))
-        break
+        case Data.ACTION_MOVE:
+          await Data.moveFiles(list)
+          break
 
-      case Data.ACTION_DELETE:
-        await Data.deleteFiles(R.defaultTo([], list))
-        break
+        case Data.ACTION_DELETE:
+          await Data.deleteFiles(list)
+          break
 
-      case Data.ACTION_MOVE_ALL:
-        await Data.moveAllFiles()
-        break
+        case Data.ACTION_MOVE_ALL:
+          await Data.moveAllFiles()
+          break
 
-      case Data.ACTION_SYNC:
-        message = await Data.syncFiles(R.defaultTo([], list))
-        break
+        case Data.ACTION_SYNC:
+          message = await Data.syncFiles(list)
+          break
+      }
     }
     result = {
       success: true,

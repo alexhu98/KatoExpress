@@ -6,6 +6,7 @@ import LRU from 'lru-cache'
 import { MediaFile, MediaFolder } from './models'
 
 const DEFAULT_MEDIA_ROOT = '/mnt/x/'
+const DEFAULT_MEDIA_ROOT2 = '/home/alex/Videos/'
 const DEFAULT_STREAMING_ROOT = 'http://192.168.0.63:8003/'
 const DEFAULT_FLAG_FOLDER = '/mnt/x/flagged/'
 const DEFAULT_FLAG_FOLDER2 = '/mnt/x/w/'
@@ -49,9 +50,12 @@ export const exists = async (path: string): Promise<boolean> => {
 
 const execFile = util.promisify(cp.execFile)
 
-export const getMediaRoot = (): string => {
+export const getMediaFolder = async (folderName: string): Promise<string> => {
   const folder = process.env.MEDIA_ROOT
-  return R.defaultTo(DEFAULT_MEDIA_ROOT, folder)
+  const folder2 = process.env.MEDIA_ROOT2
+  const path = R.defaultTo(DEFAULT_MEDIA_ROOT, folder) + folderName
+  const pathExists = await exists(path)
+  return pathExists ? path : (R.defaultTo(DEFAULT_MEDIA_ROOT2, folder2) + folderName)
 }
 
 export const getStreamingRoot = (): string => {
@@ -89,6 +93,7 @@ export const mediaFolders: MediaFolder[] = [
   buildMediaFolder('xstream'),
   buildMediaFolder('ystream'),
   buildMediaFolder('zstream'),
+  buildMediaFolder('Movies'),
 ]
 
 export const getMediaFiles = async (folderPath: string, folderName: string) => {
@@ -200,8 +205,8 @@ const getVideoInfo = async (path: string, stat: fs.Stats): Promise<IVideoInfo> =
 }
 
 export const getMediaFile = async (folderName: string, fileName: string): Promise<MediaFile | undefined> => {
-  if (fileName.endsWith('.mp4') || fileName.endsWith('.m4')) {
-    const path = getMediaRoot() + folderName + '/' + fileName
+  if (fileName.endsWith('.mp4') || fileName.endsWith('.mkv') || fileName.endsWith('.m4')) {
+    const path = await getMediaFolder(folderName) + '/' + fileName
     try {
       const stat = await fsp.stat(path)
       const videoInfo = await getVideoInfo(path, stat)
@@ -240,7 +245,7 @@ export const flagFiles = async (list: string[]) => {
       const folder = R.find(R.propEq('name', folderName), mediaFolders)
       if (folder) {
         try {
-          const path = getMediaRoot() + folderName + '/' + fileName
+          const path = await getMediaFolder(folderName) + '/' + fileName
           const target = getFlagFolder(folderName) + fileName
           const oldExists = await exists(path)
           const newExists = await exists(target)
@@ -263,7 +268,7 @@ export const moveFiles = async (list: string[]) => {
       const folder = R.find(R.propEq('name', folderName), mediaFolders)
       if (folder) {
         try {
-          const path = getMediaRoot() + folderName + '/' + fileName
+          const path = await getMediaFolder(folderName) + '/' + fileName
           const target = getMoveFolder(folderName) + fileName
           const oldExists = await exists(path)
           const newExists = await exists(target)
@@ -286,7 +291,7 @@ export const deleteFiles = async (list: string[]) => {
       const folder = R.find(R.propEq('name', folderName), mediaFolders)
       if (folder) {
         try {
-          const path = getMediaRoot() + folderName + '/' + fileName
+          const path = await getMediaFolder(folderName) + '/' + fileName
           const pathExists = await exists(path)
           if (pathExists) {
             await fsp.unlink(path)
@@ -306,11 +311,11 @@ export const moveAllFiles = async () => {
   const folder = R.find(R.propEq('name', folderName), mediaFolders)
   if (folder) {
     try {
-      const folderPath = getMediaRoot() + folderName
+      const folderPath = await getMediaFolder(folderName)
       const list = await fsp.readdir(folderPath)
       for (const fileName of list) {
         if (fileName.endsWith('.mp4') || fileName.endsWith('.m4')) {
-          const path = getMediaRoot() + folderName + '/' + fileName
+          const path = await getMediaFolder(folderName) + '/' + fileName
           const target = getMoveAllFolder() + fileName
           const oldExists = await exists(path)
           const newExists = await exists(target)
