@@ -52,7 +52,7 @@ export const execute = async (req: Request, res: Response) => {
     let message = list
     list = R.defaultTo([], list)
     const first = R.head(list)
-   if (first && first.indexOf('stream') >= 0) {
+    if (action === Data.ACTION_MOVE_ALL || (first && first.indexOf('stream') >= 0)) {
       switch (action) {
         case Data.ACTION_FLAG:
           await Data.flagFiles(list)
