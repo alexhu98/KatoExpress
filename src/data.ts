@@ -7,7 +7,7 @@ import { MediaFile, MediaFolder } from './models'
 
 const DEFAULT_MEDIA_ROOT = '/mnt/x/'
 const DEFAULT_MEDIA_ROOT2 = '/home/alex/Videos/'
-const DEFAULT_STREAMING_ROOT = 'http://192.168.0.63:8003/'
+const DEFAULT_STREAMING_ROOT = 'http://192.168.0.10:8003/'
 const DEFAULT_FLAG_FOLDER = '/mnt/x/flagged/'
 const DEFAULT_FLAG_FOLDER2 = '/mnt/x/w/'
 const DEFAULT_MOVE_FOLDER = '/mnt/x/x/'

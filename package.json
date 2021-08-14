@@ -10,7 +10,8 @@
     "build-ts": "tsc",
     "clean": "rm -rf ./dist",
     "serve": "node dist/server.js",
-    "start": "npm run serve",
+    "_start": "npm run serve",
+    "start": "nodemon",
     "test": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles",
     "watch-test": "cross-env NODE_ENV=test jest --watch --runInBand --detectOpenHandles",
     "watch-ts": "tsc --watch"
@@ -48,8 +49,10 @@
     "googleapis": "^60.0.1",
     "helmet": "^4.1.1",
     "lru-cache": "^6.0.0",
+    "nodemon": "^2.0.12",
     "ramda": "^0.27.1",
-    "ramda-adjunct": "^2.28.0"
+    "ramda-adjunct": "^2.28.0",
+    "ts-node": "^10.2.0"
   },
   "devDependencies": {
     "@types/compression": "^1.7.0",
