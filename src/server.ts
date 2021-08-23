@@ -33,7 +33,7 @@ app.use('/wstream', express.static('/mnt/x/wstream'))
 app.use('/xstream', express.static('/mnt/x/xstream'))
 app.use('/ystream', express.static('/mnt/x/ystream'))
 app.use('/zstream', express.static('/mnt/x/zstream'))
-app.use('/Movies', express.static('/home/alex/Videos/Movies'))
+// app.use('/Movies', express.static('/home/alex/Videos/Movies'))
 
 app.use('/', express.static('/mnt/data/GoogleDrive/PythonProjects'))
 
