@@ -12,6 +12,7 @@ const DEFAULT_FLAG_FOLDER = '/mnt/x/flagged/'
 const DEFAULT_FLAG_FOLDER2 = '/mnt/x/w/'
 const DEFAULT_MOVE_FOLDER = '/mnt/x/x/'
 const DEFAULT_MOVE_FOLDER2 = '/mnt/x/w/'
+const DEFAULT_MOVE_FOLDER3 = '/mnt/x/zsync/'
 const DEFAULT_MOVE_ALL_FOLDER = '/mnt/x/z/'
 
 export const ACTION_FLAG = 'FLAG'
@@ -72,7 +73,14 @@ export const getFlagFolder = (folderName: string): string => {
 export const getMoveFolder = (folderName: string): string => {
   const folder = process.env.MOVE_FOLDER
   const folder2 = process.env.MOVE_FOLDER2
-  return folderName.startsWith('x') ? R.defaultTo(DEFAULT_MOVE_FOLDER2, folder2) : R.defaultTo(DEFAULT_MOVE_FOLDER, folder)
+  const folder3 = process.env.MOVE_FOLDER3
+  if (folderName.startsWith('zstream')) {
+    return R.defaultTo(DEFAULT_MOVE_FOLDER3, folder3)
+  }
+  if (folderName.startsWith('x')) {
+    return R.defaultTo(DEFAULT_MOVE_FOLDER2, folder2)
+  }
+  return R.defaultTo(DEFAULT_MOVE_FOLDER, folder)
 }
 
 export const getMoveAllFolder = (): string => {
@@ -238,6 +246,20 @@ const parseMediaFileName = (url: string): string[] => {
   return [folder, name]
 }
 
+const getRealPath = async (folderName: string, fileName: string) => {
+  let path = await getMediaFolder("zlater") + '/' + fileName
+  let pathExists = await exists(path)
+  if (pathExists) {
+    return path
+  }
+  path = await getMediaFolder("zstream") + '/' + fileName
+  pathExists = await exists(path)
+  if (pathExists) {
+    return path
+  }
+  return await getMediaFolder(folderName) + '/' + fileName
+}
+
 export const flagFiles = async (list: string[]) => {
   for (const url of list) {
     const [folderName, fileName] = parseMediaFileName(url)
@@ -245,7 +267,7 @@ export const flagFiles = async (list: string[]) => {
       const folder = R.find(R.propEq('name', folderName), mediaFolders)
       if (folder) {
         try {
-          const path = await getMediaFolder(folderName) + '/' + fileName
+          const path = await getRealPath(folderName, fileName)
           const target = getFlagFolder(folderName) + fileName
           const oldExists = await exists(path)
           const newExists = await exists(target)
@@ -268,7 +290,7 @@ export const moveFiles = async (list: string[]) => {
       const folder = R.find(R.propEq('name', folderName), mediaFolders)
       if (folder) {
         try {
-          const path = await getMediaFolder(folderName) + '/' + fileName
+          const path = await getRealPath(folderName, fileName)
           const target = getMoveFolder(folderName) + fileName
           const oldExists = await exists(path)
           const newExists = await exists(target)
@@ -315,7 +337,7 @@ export const moveAllFiles = async () => {
       const list = await fsp.readdir(folderPath)
       for (const fileName of list) {
         if (fileName.endsWith('.mp4') || fileName.endsWith('.m4')) {
-          const path = await getMediaFolder(folderName) + '/' + fileName
+          const path = await getRealPath(folderName, fileName)
           const target = getMoveAllFolder() + fileName
           const oldExists = await exists(path)
           const newExists = await exists(target)
