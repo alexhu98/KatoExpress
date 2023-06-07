@@ -6,7 +6,7 @@ import LRU from 'lru-cache'
 import { MediaFile, MediaFolder } from './models'
 
 const DEFAULT_MEDIA_ROOT = '/mnt/x/'
-const DEFAULT_MEDIA_ROOT2 = '/home/alex/Videos/'
+const DEFAULT_MEDIA_ROOT2 = '/mnt/hdd4/'
 const DEFAULT_STREAMING_ROOT = '' // 'http://192.168.0.10:8003/'
 const DEFAULT_FLAG_FOLDER = '/mnt/x/flagged/'
 const DEFAULT_FLAG_FOLDER2 = '/mnt/x/w/'
@@ -197,7 +197,7 @@ const getVideoInfo = async (path: string, stat: fs.Stats): Promise<IVideoInfo> =
     }
   }
   catch (ex) {
-    console.error('getDuration() ex')
+    console.error('getDuration() ex, path = ' + path)
   }
   if (videoInfo) {
     videoInfoCache.set(cacheKey, videoInfo)
