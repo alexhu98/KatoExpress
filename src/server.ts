@@ -5,6 +5,7 @@ import helmet from 'helmet'
 import cors from 'cors'
 import * as Browser from './controllers/browser'
 import * as Calendar from './controllers/calendar-controller'
+import * as MagnetHandler from './controllers/magnet-handler'
 
 dotenv.config()
 
@@ -25,6 +26,7 @@ app.disable('x-powered-by')
 app.get('/api/media', Browser.browse)
 app.get('/api/media/:name', Browser.browseMediaFolder)
 app.post('/api/media', Browser.execute)
+app.get('/api/magnet/:magnet', MagnetHandler.execute)
 
 app.get('/api/calendar/events', Calendar.getEvents)
 
